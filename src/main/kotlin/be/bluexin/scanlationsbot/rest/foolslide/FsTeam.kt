@@ -17,19 +17,24 @@
  * along with scanlationsbot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package be.bluexin.scanlationsbot.db
+package be.bluexin.scanlationsbot.rest.foolslide
 
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
-import org.joda.time.DateTime
 import java.time.LocalDateTime
 
-fun <T : IntEntity> IntEntityClass<T>.findFirstOrCreate(find: SqlExpressionBuilder.() -> Op<Boolean>, create: T.() -> Unit)
-        = this.find(find).firstOrNull() ?: this.new(create)
-
-fun findOrCreatePerson(name: String)
-        = Person.findFirstOrCreate({ PeopleTable.name like name }, { this.name = name })
-
-fun LocalDateTime.toJoda() = DateTime(year, month.value, dayOfMonth, hour, minute, second)
+data class FsTeam(
+        val id: Int,
+        val name: String,
+        val stub: String,
+        val url: String,
+        val forum: String,
+        val irc: String,
+        val twitter: String,
+        val facebook: String,
+        val facebookid: String,
+        val created: LocalDateTime,
+        val lastseen: LocalDateTime,
+        val updated: LocalDateTime,
+        val creator: Int,
+        val editor: Int,
+        val href: String
+)

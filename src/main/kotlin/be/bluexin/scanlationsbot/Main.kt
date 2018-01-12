@@ -1,24 +1,66 @@
+/*
+ * Copyright (c) 2018 Arnaud 'Bluexin' Solé
+ *
+ * This file is part of scanlationsbot.
+ *
+ * scanlationsbot is free software: you can redistribute it and/or modify
+ * it under the terms of the Lesser GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * scanlationsbot is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * Lesser GNU General Public License for more details.
+ *
+ * You should have received a copy of the Lesser GNU General Public License
+ * along with scanlationsbot.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 package be.bluexin.scanlationsbot
 
-import be.bluexin.scanlationsbot.db.*
-import be.bluexin.scanlationsbot.rest.foolslide.Chapters
-import be.bluexin.scanlationsbot.rest.foolslide.Comics
+import be.bluexin.scanlationsbot.db.ChaptersTable
+import be.bluexin.scanlationsbot.db.ComicsTable
+import be.bluexin.scanlationsbot.db.PeopleTable
+import be.bluexin.scanlationsbot.db.TeamsTable
+import be.bluexin.scanlationsbot.rest.foolslide.Foolslide
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.fasterxml.jackson.module.kotlin.readValue
 import com.github.kittinunf.fuel.core.FuelManager
-import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.jackson.mapper
-import com.github.kittinunf.fuel.jackson.responseObject
+import kotlinx.coroutines.experimental.runBlocking
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
-import java.sql.BatchUpdateException
 import java.sql.SQLException
 import java.time.LocalDateTime
+import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
     println("Hello world !")
+
+    val settings: BotSettings
+    val settingsFile = File("bot.json")
+    if (!settingsFile.exists()) {
+        mapper.writeValue(settingsFile, BotSettings(
+                token = "private bot token",
+                owners = listOf(),
+                dburl = "database url (in the form of jdbc:mysql://ip:port/database)",
+                dbuser = "database username",
+                dbpassword = "database password",
+                hostemail = "host e-mail"
+        ))
+        println("Default config file was generated. Please edit with the correct info.")
+        exitProcess(0)
+    } else {
+        try {
+            settings = mapper.readValue<BotSettings>(settingsFile)
+        } catch (e: Exception) {
+            println("Config file couldn't be parsed. Please consider deleting it to regenerate it.")
+            exitProcess(1)
+        }
+    }
 
     val module = SimpleModule("customldt")
     module.addDeserializer(LocalDateTime::class.java, DateTimeDeserializer())
@@ -31,12 +73,11 @@ fun main(args: Array<String>) {
             "Accept-Encoding" to "gzip",
             "Accept-Language" to "en-US,en;q=0.5",
             "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Contact" to "bluexin.gamesATgmail.com"
+            "Contact" to settings.hostemail
     )
-    FuelManager.instance.basePath = "https://hatigarmscans.eu/hs/api"
-//    FuelManager.instance.basePath = "https://jaiminisbox.com/reader/api"
 
-    val db = Database.connect("jdbc:mysql://localhost:3306/scanlationsdev", "com.mysql.cj.jdbc.Driver", user = "scanlations-dev", password = "scanbot")
+    val db = if (settings.dbpassword == null) Database.connect(settings.dburl, "com.mysql.cj.jdbc.Driver", user = settings.dbuser)
+    else Database.connect(settings.dburl, "com.mysql.cj.jdbc.Driver", user = settings.dbuser, password = settings.dbpassword)
     try {
         println("Connected using ${db.vendor} database on version ${db.version}")
         transaction {
@@ -50,58 +91,11 @@ fun main(args: Array<String>) {
     } catch (e: SQLException) {
         println("Couldn't connect to database.")
         e.printStackTrace()
-        return
+        exitProcess(1)
     }
 
-//    val comics = getComicsBlocking().comics
-    val comics = mapper.readValue<Comics>(File("samples/comics.json")).comics
-    println("Found ${comics.size} comics at ${FuelManager.instance.basePath}")
-    comics.forEach {
-        println("Found ${it.name} by ${it.author} (drawn by ${it.artist})")
-        transaction {
-            if (Comic.find { ComicsTable.slug like it.stub }.empty()) {
-                println("Adding ${it.name} (${it.stub}) to db...")
-                try {
-                    Comic.new {
-                        name = it.name
-                        slug = it.stub
-                        if (it.author.isNotBlank()) author = findOrCreatePerson(it.author)
-                        if (it.artist.isNotBlank()) artist = findOrCreatePerson(it.artist)
-                        description = it.description
-                        adult = it.adult
-                        created = it.created.toJoda()
-                        small_thumb_url = it.thumb_url
-                        big_thumb_url = it.fullsized_thumb_url
-                        href = it.href
-                    }
-                } catch (e: BatchUpdateException) {
-                    println("Failed to store a Comic.\n$it")
-                }
-                println("Done !")
-            }
-        }
-    }
-
-//    val chapters = getReleasedChapters().chapters
-    val chapters = mapper.readValue<Chapters>(File("samples/chapters.json")).chapters
-    println("Found ${chapters.size} chapters at ${FuelManager.instance.basePath}")
-    chapters.forEach {
-        println("Released ${it.comic.name} chapter ${it.chapter.chapter}${if (it.chapter.subchapter != 0) {
-            "." + it.chapter.subchapter
-        } else ""}: ${it.chapter.name}\n\tat ${it.chapter.href} on ${it.chapter.created}${if (it.chapter.updated != LocalDateTime.MIN) " (updated ${it.chapter.updated})" else ""}\n\t${it.chapter.title}")
+    runBlocking {
+        Foolslide.fetchComics("https://hatigarmscans.eu/hs/api").join()
+        Foolslide.fetchChapters("https://hatigarmscans.eu/hs/api").join()
     }
 }
-
-fun getComicsBlocking() = "/reader/comics/per_page/100/".httpGet().responseObject<Comics>().third.get()
-
-fun getReleasedChapters() = "/reader/chapters/orderby/desc_created/".httpGet().responseObject<Chapters>().third.get()
-
-// /reader/chapters/orderby/desc_created/ -> chapters.json
-
-// /status/info -> status.json
-
-/*
-args :
-/per_page/x -> x per page (default 30, max 100)
-/page/x -> page x
- */

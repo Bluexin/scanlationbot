@@ -17,19 +17,13 @@
  * along with scanlationsbot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package be.bluexin.scanlationsbot.db
+package be.bluexin.scanlationsbot
 
-import org.jetbrains.exposed.dao.IntEntity
-import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
-import org.joda.time.DateTime
-import java.time.LocalDateTime
-
-fun <T : IntEntity> IntEntityClass<T>.findFirstOrCreate(find: SqlExpressionBuilder.() -> Op<Boolean>, create: T.() -> Unit)
-        = this.find(find).firstOrNull() ?: this.new(create)
-
-fun findOrCreatePerson(name: String)
-        = Person.findFirstOrCreate({ PeopleTable.name like name }, { this.name = name })
-
-fun LocalDateTime.toJoda() = DateTime(year, month.value, dayOfMonth, hour, minute, second)
+data class BotSettings(
+        val token: String,
+        val owners: List<Long>,
+        val dburl: String,
+        val dbuser: String,
+        val dbpassword: String? = null,
+        val hostemail: String
+)

@@ -4,3 +4,4 @@ samples/
 scanlationsbot.iml
 build/
 .gradle/
+bot.json
