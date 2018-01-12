@@ -21,6 +21,7 @@
 
 package be.bluexin.scanlationsbot.db
 
+import be.bluexin.scanlationsbot.Global.settings
 import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
@@ -33,7 +34,7 @@ import kotlin.system.exitProcess
 
 fun setupDB(url: String, user: String, pwd: String?) {
     println("Setting up db connection...")
-    val db = if (pwd == null) Database.connect(url, "com.mysql.cj.jdbc.Driver", user = user)
+    val db = if (pwd == null) Database.connect(settings.dburl, "com.mysql.cj.jdbc.Driver", user = settings.dbuser)
     else Database.connect(url, "com.mysql.cj.jdbc.Driver", user = user, password = pwd)
     try {
         println("Connected using ${db.vendor} database on version ${db.version}")
@@ -148,4 +149,4 @@ class Team(id: EntityID<Int>) : IntEntity(id) {
     var discord by TeamsTable.discord
 }
 
-// TODO: Genres, Tags, Publishers, Authors, Artists, Alternative Names, Staff members managing said series
+// TODO: Genres, Tags, Publishers, Authors, Artists, Alternative Names, Staff members managing said series, series status (on-going, completed, dropped, ...)

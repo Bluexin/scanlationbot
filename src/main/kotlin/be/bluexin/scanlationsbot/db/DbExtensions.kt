@@ -33,3 +33,4 @@ fun findOrCreatePerson(name: String)
         = Person.findFirstOrCreate({ PeopleTable.name like name }, { this.name = name })
 
 fun LocalDateTime.toJoda() = DateTime(year, month.value, dayOfMonth, hour, minute, second)
+fun DateTime.toJava() = LocalDateTime.of(year, monthOfYear, dayOfMonth, hourOfDay, minuteOfHour, secondOfMinute)

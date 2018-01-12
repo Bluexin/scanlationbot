@@ -38,5 +38,7 @@ object ScanBot {
                 .withRecommendedShardCount()
                 .login()
         )
-    } // Invite link for teh bot: https://discordapp.com/oauth2/authorize?&client_id=203910186270851073&scope=bot (no perms cuz cba)
+    }
+    // Invite link for teh bot: https://discordapp.com/oauth2/authorize?&client_id=203910186270851073&scope=bot (no perms cuz cba)
+    // See BotInviteBuilder
 }

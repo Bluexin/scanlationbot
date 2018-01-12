@@ -17,26 +17,15 @@
  * along with scanlationsbot.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-package be.bluexin.scanlationsbot.discord
+package be.bluexin.scanlationsbot.discord.commands
 
-import be.bluexin.scanlationsbot.discord.commands.Commands
-import sx.blah.discord.api.events.EventSubscriber
-import sx.blah.discord.handle.impl.events.ReadyEvent
-import sx.blah.discord.handle.impl.events.guild.channel.message.MentionEvent
+import sx.blah.discord.handle.obj.IMessage
 
-object EventHandler {
+object Help: Command {
+    override val name = "help"
+    override val aliases = listOf("?", "halp")
 
-    var ready = false
-
-    @EventSubscriber
-    fun onMention(e: MentionEvent) {
-        if (!e.author.isBot) Commands.process(e.message)
-    }
-
-    @EventSubscriber
-    fun onReady(e: ReadyEvent) {
-        println("Logged in as ${e.client.ourUser.name} (using app ${e.client.applicationName}).")
-        e.client.online("Scanning your mind")
-        ready = true
+    override fun process(trigger: IMessage) {
+        trigger.channel.sendMessage("Who needs help, really? #TODO") // TODO
     }
 }

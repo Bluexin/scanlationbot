@@ -19,6 +19,7 @@
 
 package be.bluexin.scanlationsbot
 
+import be.bluexin.scanlationsbot.Global.settings
 import be.bluexin.scanlationsbot.db.setupDB
 import be.bluexin.scanlationsbot.discord.ScanBot
 import be.bluexin.scanlationsbot.rest.setupRest
@@ -30,7 +31,6 @@ import java.io.File
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
-    val settings: BotSettings
     val settingsFile = File("bot.json")
     if (!settingsFile.exists()) {
         mapper.writeValue(settingsFile, BotSettings(
@@ -66,4 +66,8 @@ fun main(args: Array<String>) {
         restSetup.join()
         dbSetup.join()
     }
+}
+
+object Global {
+    lateinit var settings: BotSettings
 }
