@@ -20,15 +20,20 @@ sourceCompatibility = 1.8
 repositories {
     mavenCentral()
     maven {
-        url  "https://jitpack.io"
+        url 'https://jitpack.io'
     }
     jcenter()
+    maven {
+        url 'https://dl.bintray.com/kotlin/exposed/'
+    }
 }
 
 dependencies {
     compile "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlin_version"
     compile 'com.github.kittinunf.fuel:fuel-jackson:1.12.0'
     compile 'com.github.austinv11:Discord4J:2.9.3'
+    compile 'org.jetbrains.exposed:exposed:0.9.1'
+    compile 'mysql:mysql-connector-java:8.0.8-dmr'
 }
 
 compileKotlin {

@@ -22,7 +22,7 @@ data class Comic(
         val artist: String,
         val description: String,
         /**
-         * image.jpg (need to find endpoint)
+         * image.jpg (see [fullsized_thumb_url])
          */
         val thumbnail: String,
         /**
