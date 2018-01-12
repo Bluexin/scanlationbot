@@ -19,27 +19,17 @@
 
 package be.bluexin.scanlationsbot
 
-import be.bluexin.scanlationsbot.db.ChaptersTable
-import be.bluexin.scanlationsbot.db.ComicsTable
-import be.bluexin.scanlationsbot.db.PeopleTable
-import be.bluexin.scanlationsbot.db.TeamsTable
-import be.bluexin.scanlationsbot.rest.foolslide.Foolslide
-import com.fasterxml.jackson.databind.module.SimpleModule
+import be.bluexin.scanlationsbot.db.setupDB
+import be.bluexin.scanlationsbot.discord.ScanBot
+import be.bluexin.scanlationsbot.rest.setupRest
 import com.fasterxml.jackson.module.kotlin.readValue
-import com.github.kittinunf.fuel.core.FuelManager
 import com.github.kittinunf.fuel.jackson.mapper
+import kotlinx.coroutines.experimental.launch
 import kotlinx.coroutines.experimental.runBlocking
-import org.jetbrains.exposed.sql.Database
-import org.jetbrains.exposed.sql.SchemaUtils
-import org.jetbrains.exposed.sql.transactions.transaction
 import java.io.File
-import java.sql.SQLException
-import java.time.LocalDateTime
 import kotlin.system.exitProcess
 
 fun main(args: Array<String>) {
-    println("Hello world !")
-
     val settings: BotSettings
     val settingsFile = File("bot.json")
     if (!settingsFile.exists()) {
@@ -55,47 +45,25 @@ fun main(args: Array<String>) {
         exitProcess(0)
     } else {
         try {
-            settings = mapper.readValue<BotSettings>(settingsFile)
+            settings = mapper.readValue(settingsFile)
         } catch (e: Exception) {
             println("Config file couldn't be parsed. Please consider deleting it to regenerate it.")
             exitProcess(1)
         }
     }
 
-    val module = SimpleModule("customldt")
-    module.addDeserializer(LocalDateTime::class.java, DateTimeDeserializer())
-    module.addDeserializer(Boolean::class.java, BooleanDeserializer())
-
-    mapper.registerModule(module)
-
-    FuelManager.instance.baseHeaders = mapOf(
-            "User-Agent" to "Discord Bot",
-            "Accept-Encoding" to "gzip",
-            "Accept-Language" to "en-US,en;q=0.5",
-            "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Contact" to settings.hostemail
-    )
-
-    val db = if (settings.dbpassword == null) Database.connect(settings.dburl, "com.mysql.cj.jdbc.Driver", user = settings.dbuser)
-    else Database.connect(settings.dburl, "com.mysql.cj.jdbc.Driver", user = settings.dbuser, password = settings.dbpassword)
-    try {
-        println("Connected using ${db.vendor} database on version ${db.version}")
-        transaction {
-            SchemaUtils.create(
-                    ComicsTable,
-                    PeopleTable,
-                    ChaptersTable,
-                    TeamsTable
-            )
-        }
-    } catch (e: SQLException) {
-        println("Couldn't connect to database.")
-        e.printStackTrace()
-        exitProcess(1)
+    val restSetup = launch {
+        setupRest(settings.hostemail)
     }
 
+    val dbSetup = launch {
+        setupDB(settings.dburl, settings.dbuser, settings.dbpassword)
+    }
+
+    ScanBot.login(settings.token)
+
     runBlocking {
-        Foolslide.fetchComics("https://hatigarmscans.eu/hs/api").join()
-        Foolslide.fetchChapters("https://hatigarmscans.eu/hs/api").join()
+        restSetup.join()
+        dbSetup.join()
     }
 }

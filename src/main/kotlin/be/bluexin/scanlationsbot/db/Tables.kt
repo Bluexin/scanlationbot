@@ -25,6 +25,32 @@ import org.jetbrains.exposed.dao.EntityID
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
 import org.jetbrains.exposed.dao.IntIdTable
+import org.jetbrains.exposed.sql.Database
+import org.jetbrains.exposed.sql.SchemaUtils
+import org.jetbrains.exposed.sql.transactions.transaction
+import java.sql.SQLException
+import kotlin.system.exitProcess
+
+fun setupDB(url: String, user: String, pwd: String?) {
+    println("Setting up db connection...")
+    val db = if (pwd == null) Database.connect(url, "com.mysql.cj.jdbc.Driver", user = user)
+    else Database.connect(url, "com.mysql.cj.jdbc.Driver", user = user, password = pwd)
+    try {
+        println("Connected using ${db.vendor} database on version ${db.version}")
+        transaction {
+            SchemaUtils.create(
+                    ComicsTable,
+                    PeopleTable,
+                    ChaptersTable,
+                    TeamsTable
+            )
+        }
+    } catch (e: SQLException) {
+        println("Couldn't connect to database.")
+        e.printStackTrace()
+        exitProcess(1)
+    }
+}
 
 object ComicsTable : IntIdTable() {
     val name = varchar("name", 255).uniqueIndex()
