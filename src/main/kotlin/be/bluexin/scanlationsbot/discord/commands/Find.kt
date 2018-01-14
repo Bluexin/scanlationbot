@@ -32,7 +32,7 @@ import kotlin.math.min
 object Find : Command {
     override val name = "find"
 
-    override fun process(trigger: IMessage) {
+    override suspend fun process(trigger: IMessage) {
         val parts = trigger.content.split("--")
         if (parts.any { it.startsWith("team", ignoreCase = true) }) {
             handleTeams(parts, trigger)

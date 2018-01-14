@@ -133,13 +133,16 @@ fun embedTeam(team: Team): EmbedObject {
     builder.appendField("Members", "TODO", true)
 
     if (team.href != null) builder.withUrl(team.href)
-    if (team.discord != null) builder.appendField("Discord", team.discord, false)
+    if (team.discord != null) builder.appendField("Discord", "[${team.discord!!.split('/').last()}](${team.discord})", false)
     if (team.irc != null) builder.appendField("IRC", team.irc, false)
-    if (team.twitter != null) builder.appendField("Twitter", team.twitter, false)
-    if (team.facebook != null) builder.appendField("Facebook", "[test](${team.facebook})", false)
+    if (team.twitter != null) builder.appendField("Twitter", "[${team.twitter!!.split('/').last()}](${team.twitter})", false)
+    if (team.facebook != null) builder.appendField("Facebook", "[${team.facebook!!.split('/').last()}](${team.facebook})", false)
     if (team.forum != null) builder.appendField("Forum", team.forum, false)
+    if (team.rss != null) builder.appendField("Rss", team.rss, false)
 
     return builder.build()
 }
 
 fun embedError(text: String) = EmbedBuilder().withDescription(text).withColor(Color.RED).build()
+
+fun embedSuccess(text: String) = EmbedBuilder().withDescription(text).withColor(Color.GREEN).build()

@@ -26,11 +26,11 @@ import org.jetbrains.exposed.sql.SqlExpressionBuilder
 import org.joda.time.DateTime
 import java.time.LocalDateTime
 
-fun <T : IntEntity> IntEntityClass<T>.findFirstOrCreate(find: SqlExpressionBuilder.() -> Op<Boolean>, create: T.() -> Unit)
-        = this.find(find).firstOrNull() ?: this.new(create)
+fun <T : IntEntity> IntEntityClass<T>.findFirstOrUpdate(find: SqlExpressionBuilder.() -> Op<Boolean>, update: T.() -> Unit)
+        = this.find(find).firstOrNull()?.also { it.update() } ?: this.new(update)
 
 fun findOrCreatePerson(name: String)
-        = Person.findFirstOrCreate({ PeopleTable.name like name }, { this.name = name })
+        = Person.findFirstOrUpdate({ PeopleTable.name like name }, { this.name = name })
 
 fun LocalDateTime.toJoda() = DateTime(year, month.value, dayOfMonth, hour, minute, second)
 fun DateTime.toJava() = LocalDateTime.of(year, monthOfYear, dayOfMonth, hourOfDay, minuteOfHour, secondOfMinute)

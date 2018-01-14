@@ -21,12 +21,13 @@ package be.bluexin.scanlationsbot.rest
 
 import be.bluexin.scanlationsbot.BooleanDeserializer
 import be.bluexin.scanlationsbot.DateTimeDeserializer
+import be.bluexin.scanlationsbot.Global
 import com.fasterxml.jackson.databind.module.SimpleModule
 import com.github.kittinunf.fuel.core.FuelManager
 import com.github.kittinunf.fuel.jackson.mapper
 import java.time.LocalDateTime
 
-fun setupRest(hostemail: String) {
+fun setupRest() {
     println("Setting up REST...")
     val module = SimpleModule("customldt")
     module.addDeserializer(LocalDateTime::class.java, DateTimeDeserializer())
@@ -39,7 +40,7 @@ fun setupRest(hostemail: String) {
             "Accept-Encoding" to "gzip",
             "Accept-Language" to "en-US,en;q=0.5",
             "Accept" to "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-            "Contact" to hostemail
+            "Contact" to Global.settings.hostemail
     )
     println("Set up REST!")
 }

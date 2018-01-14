@@ -33,7 +33,7 @@ import kotlin.system.exitProcess
 fun main(args: Array<String>) {
     val settingsFile = File("bot.json")
     if (!settingsFile.exists()) {
-        mapper.writeValue(settingsFile, BotSettings(
+        mapper.writerWithDefaultPrettyPrinter().writeValue(settingsFile, BotSettings(
                 token = "private bot token",
                 owners = listOf(),
                 dburl = "database url (in the form of jdbc:mysql://ip:port/database)",
@@ -53,14 +53,14 @@ fun main(args: Array<String>) {
     }
 
     val restSetup = launch {
-        setupRest(settings.hostemail)
+        setupRest()
     }
 
     val dbSetup = launch {
-        setupDB(settings.dburl, settings.dbuser, settings.dbpassword)
+        setupDB()
     }
 
-    ScanBot.login(settings.token)
+    ScanBot.login()
 
     runBlocking {
         restSetup.join()

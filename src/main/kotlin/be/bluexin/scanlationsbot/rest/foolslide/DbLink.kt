@@ -23,8 +23,8 @@ import be.bluexin.scanlationsbot.db.*
 import org.jetbrains.exposed.sql.and
 import java.time.LocalDateTime
 
-fun Comic.Companion.findOrCreate(from: FsComic): Comic {
-    return findFirstOrCreate(
+fun Comic.Companion.findOrUpdate(from: FsComic): Comic {
+    return findFirstOrUpdate(
             { ComicsTable.slug eq from.stub },
             {
                 name = from.name
@@ -41,15 +41,15 @@ fun Comic.Companion.findOrCreate(from: FsComic): Comic {
     )
 }
 
-fun Chapter.Companion.findOrCreate(from: FsChapterInfo): Chapter {
-    val comic = Comic.findOrCreate(from.comic)
-    return findFirstOrCreate(
+fun Chapter.Companion.findOrUpdate(from: FsChapterInfo): Chapter {
+    val comic = Comic.findOrUpdate(from.comic)
+    return findFirstOrUpdate(
             { ChaptersTable.comic eq comic.id and (ChaptersTable.chapter eq from.chapter.chapter) and if (from.chapter.subchapter != 0) ChaptersTable.subchapter eq from.chapter.subchapter else ChaptersTable.subchapter.isNull() },
             {
                 name = from.chapter.name
                 slug = from.chapter.stub
                 this.comic = comic
-                if (from.teams.isNotEmpty()) this.team = Team.findOrCreate(from.teams[0])
+                if (from.teams.isNotEmpty()) this.team = Team.findOrUpdate(from.teams[0])
                 chapter = from.chapter.chapter
                 if (from.chapter.subchapter != 0) subchapter = from.chapter.subchapter
                 volume = from.chapter.volume
@@ -63,8 +63,8 @@ fun Chapter.Companion.findOrCreate(from: FsChapterInfo): Chapter {
     )
 }
 
-fun Team.Companion.findOrCreate(from: FsTeam): Team {
-    return findFirstOrCreate(
+fun Team.Companion.findOrUpdate(from: FsTeam): Team {
+    return findFirstOrUpdate(
             { TeamsTable.slug eq from.stub },
             {
                 name = from.name

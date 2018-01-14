@@ -19,6 +19,7 @@
 
 package be.bluexin.scanlationsbot.discord
 
+import be.bluexin.scanlationsbot.Global
 import sx.blah.discord.api.ClientBuilder
 import sx.blah.discord.api.IDiscordClient
 
@@ -31,10 +32,10 @@ object ScanBot {
         client.dispatcher.registerListener(EventHandler)
     }
 
-    fun login(token: String) {
+    fun login() {
         println("Logging bot in...")
         init(ClientBuilder()
-                .withToken(token)
+                .withToken(Global.settings.token)
                 .withRecommendedShardCount()
                 .login()
         )

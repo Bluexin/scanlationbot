@@ -32,10 +32,10 @@ import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.SQLException
 import kotlin.system.exitProcess
 
-fun setupDB(url: String, user: String, pwd: String?) {
+fun setupDB() {
     println("Setting up db connection...")
-    val db = if (pwd == null) Database.connect(settings.dburl, "com.mysql.cj.jdbc.Driver", user = settings.dbuser)
-    else Database.connect(url, "com.mysql.cj.jdbc.Driver", user = user, password = pwd)
+    val db = if (settings.dbpassword == null) Database.connect(settings.dburl, "com.mysql.cj.jdbc.Driver", user = settings.dbuser)
+    else Database.connect(settings.dburl, "com.mysql.cj.jdbc.Driver", user = settings.dbuser, password = settings.dbpassword!!)
     try {
         println("Connected using ${db.vendor} database on version ${db.version}")
         transaction {
@@ -43,7 +43,8 @@ fun setupDB(url: String, user: String, pwd: String?) {
                     ComicsTable,
                     PeopleTable,
                     ChaptersTable,
-                    TeamsTable
+                    TeamsTable,
+                    FoolsTable
             )
         }
     } catch (e: SQLException) {
@@ -134,6 +135,7 @@ object TeamsTable : IntIdTable() {
     val irc = text("irc").nullable()
     val twitter = text("twitter").nullable()
     val discord = text("discord").nullable()
+    val rss = text("rss").nullable()
 }
 
 class Team(id: EntityID<Int>) : IntEntity(id) {
@@ -147,6 +149,19 @@ class Team(id: EntityID<Int>) : IntEntity(id) {
     var irc by TeamsTable.irc
     var twitter by TeamsTable.twitter
     var discord by TeamsTable.discord
+    var rss by TeamsTable.rss
+}
+
+object FoolsTable : IntIdTable() {
+    val team = reference("team", TeamsTable).uniqueIndex()
+    val url = text("url")
+}
+
+class FoolslideEntity(id: EntityID<Int>) : IntEntity(id) {
+    companion object : IntEntityClass<FoolslideEntity>(FoolsTable)
+
+    var team by Team referencedOn FoolsTable.team
+    var url by FoolsTable.url
 }
 
 // TODO: Genres, Tags, Publishers, Authors, Artists, Alternative Names, Staff members managing said series, series status (on-going, completed, dropped, ...)

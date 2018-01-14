@@ -19,10 +19,11 @@
 
 package be.bluexin.scanlationsbot.rest.foolslide
 
-import be.bluexin.scanlationsbot.db.Chapter
-import be.bluexin.scanlationsbot.db.Comic
+import be.bluexin.scanlationsbot.db.*
 import com.github.kittinunf.fuel.httpGet
 import com.github.kittinunf.fuel.jackson.responseObject
+import com.github.kittinunf.result.Result
+import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import org.jetbrains.exposed.sql.transactions.transaction
 import java.sql.BatchUpdateException
@@ -46,7 +47,7 @@ object Foolslide {
     private fun page(i: Int) = "/page/$i"
     private const val order = "/orderby/desc_created"
 
-    fun fetchComics(baseUrl: String) = launch {
+    suspend fun fetchComics(baseUrl: String) {
         var i = 1
         var cont = true
         while (cont) {
@@ -65,7 +66,7 @@ object Foolslide {
                         println("Found ${it.name} by ${it.author} (drawn by ${it.artist})")
                         try {
                             transaction {
-                                Comic.findOrCreate(it)
+                                Comic.findOrUpdate(it)
                             }
                         } catch (e: BatchUpdateException) {
                             println("Failed to store a Comic.\n$it")
@@ -76,14 +77,18 @@ object Foolslide {
         }
     }
 
-    fun fetchChapters(baseUrl: String) = launch {
+    fun fetchComicsAsync(baseUrl: String) = async {
+        fetchComics(baseUrl)
+    }
+
+    suspend fun fetchChapters(baseUrl: String) {
         var i = 1
         var cont = true
         while (cont) {
-            val (_, response, result) = "$baseUrl${chapters}$order$limit${page(i++)}".httpGet().responseObject<FsChapters>()
+            val (_, response, result) = "$baseUrl$chapters$order$limit${page(i++)}".httpGet().responseObject<FsChapters>()
             if (response.statusCode != 200) {
                 println("Received ${response.statusCode} when querying ${response.url}")
-                break
+                throw (result as Result.Failure).error
             }
             val chapters = result.get().chapters
             cont = chapters.size > 99
@@ -95,7 +100,14 @@ object Foolslide {
                         println("Found ${it.comic.name} chapter ${it.chapter.chapter}${if (it.chapter.subchapter != 0) "." + it.chapter.subchapter else ""}")
                         try {
                             transaction {
-                                Chapter.findOrCreate(it)
+                                val ch = Chapter.findOrUpdate(it)
+                                if (ch.team != null) FoolslideEntity.findFirstOrUpdate(
+                                        { FoolsTable.team eq ch.team!!.id },
+                                        {
+                                            team = ch.team!!
+                                            url = baseUrl
+                                        }
+                                )
                             }
                         } catch (e: BatchUpdateException) {
                             println("Failed to store a Comic.\n$it")
@@ -104,5 +116,9 @@ object Foolslide {
                 }
             }
         }
+    }
+
+    fun fetchChaptersAsync(baseUrl: String) = async {
+        fetchChapters(baseUrl)
     }
 }

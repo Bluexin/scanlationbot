@@ -19,6 +19,7 @@
 
 package be.bluexin.scanlationsbot.discord.commands
 
+import be.bluexin.scanlationsbot.discord.embedError
 import kotlinx.coroutines.experimental.launch
 import sx.blah.discord.handle.obj.IMessage
 
@@ -41,7 +42,7 @@ interface Command {
     /**
      * Called when this command is used.
      */
-    fun process(trigger: IMessage)
+    suspend fun process(trigger: IMessage)
 
     /**
      * Help string
@@ -51,8 +52,9 @@ interface Command {
 }
 
 enum class Commands(val command: Command) {
+    FIND(Find),
     HELP(Help),
-    FIND(Find);
+    INDEX(Index);
 
     private fun canProcess(trigger: IMessage)
             = with(trigger.content.replace("<@!?[0-9]+>".toRegex(), "").trim()) {
@@ -62,9 +64,14 @@ enum class Commands(val command: Command) {
     companion object {
         fun process(trigger: IMessage) {
             launch {
-                Commands.values().firstOrNull {
-                    it.canProcess(trigger)
-                }?.command?.process(trigger)
+                try {
+                    Commands.values().firstOrNull {
+                        it.canProcess(trigger)
+                    }?.command?.process(trigger)
+                } catch (e: Throwable) {
+                    trigger.channel.sendMessage(embedError("An error occurred. ${e.message}"))
+                    e.printStackTrace()
+                }
             }
         }
     }

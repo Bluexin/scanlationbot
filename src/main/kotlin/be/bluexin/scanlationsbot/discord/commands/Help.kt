@@ -25,7 +25,7 @@ object Help: Command {
     override val name = "help"
     override val aliases = listOf("?", "halp")
 
-    override fun process(trigger: IMessage) {
+    override suspend fun process(trigger: IMessage) {
         trigger.channel.sendMessage("Who needs help, really? #TODO") // TODO
     }
 }
