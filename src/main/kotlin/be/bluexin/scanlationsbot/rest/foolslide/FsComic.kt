@@ -39,6 +39,19 @@ data class FsComic(
         val hidden: Int,
         val author: String,
         val artist: String,
+        val altnames: String = "",
+        /**
+         * TODO: seems to be `<br>`-separated genres
+         */
+        val genre: String = "",
+        /**
+         * Ongoing, ..?
+         */
+        val status: String = "",
+        /**
+         * Number tied to internal forum
+         */
+        val forumurl: String = "",
         val description: String,
         /**
          * image.jpg (see [fullsized_thumb_url])

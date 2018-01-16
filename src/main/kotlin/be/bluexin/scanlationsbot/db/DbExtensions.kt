@@ -21,8 +21,7 @@ package be.bluexin.scanlationsbot.db
 
 import org.jetbrains.exposed.dao.IntEntity
 import org.jetbrains.exposed.dao.IntEntityClass
-import org.jetbrains.exposed.sql.Op
-import org.jetbrains.exposed.sql.SqlExpressionBuilder
+import org.jetbrains.exposed.sql.*
 import org.joda.time.DateTime
 import java.time.LocalDateTime
 
@@ -34,3 +33,5 @@ fun findOrCreatePerson(name: String)
 
 fun LocalDateTime.toJoda() = DateTime(year, month.value, dayOfMonth, hour, minute, second)
 fun DateTime.toJava() = LocalDateTime.of(year, monthOfYear, dayOfMonth, hourOfDay, minuteOfHour, secondOfMinute)
+
+infix fun<T:Any?> ExpressionWithColumnType<T>.regexp(pattern: String): Op<Boolean> = RegexpOp(this, QueryParameter(pattern, columnType))

@@ -51,7 +51,7 @@ object Foolslide {
         var i = 1
         var cont = true
         while (cont) {
-            val (_, response, result) = "$baseUrl$comics$limit${page(i++)}".httpGet().responseObject<FsComics>()
+            val (_, response, result) = "${baseUrl.replace("/\$".toRegex(), "")}$comics$limit${page(i++)}".httpGet().responseObject<FsComics>()
             if (response.statusCode != 200) {
                 println("Received ${response.statusCode} when querying ${response.url}")
                 break
@@ -85,9 +85,10 @@ object Foolslide {
         var i = 1
         var cont = true
         while (cont) {
-            val (_, response, result) = "$baseUrl$chapters$order$limit${page(i++)}".httpGet().responseObject<FsChapters>()
+            val (_, response, result) = "${baseUrl.replace("/\$".toRegex(), "")}$chapters$order$limit${page(i++)}".httpGet().responseObject<FsChapters>()
             if (response.statusCode != 200) {
-                println("Received ${response.statusCode} when querying ${response.url}")
+//                println("Received ${response.statusCode} when querying ${response.url}")
+                println(response)
                 throw (result as Result.Failure).error
             }
             val chapters = result.get().chapters

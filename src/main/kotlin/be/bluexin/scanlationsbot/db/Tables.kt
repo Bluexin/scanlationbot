@@ -80,6 +80,8 @@ class Comic(id: EntityID<Int>) : IntEntity(id) {
     var small_thumb_url by ComicsTable.small_thumb_url
     var big_thumb_url by ComicsTable.big_thumb_url
     var href by ComicsTable.href
+
+    val chapters by Chapter referrersOn ChaptersTable.comic
 }
 
 object PeopleTable : IntIdTable() {
@@ -150,6 +152,8 @@ class Team(id: EntityID<Int>) : IntEntity(id) {
     var twitter by TeamsTable.twitter
     var discord by TeamsTable.discord
     var rss by TeamsTable.rss
+
+    val chapters by Chapter.optionalReferrersOn(ChaptersTable.team)
 }
 
 object FoolsTable : IntIdTable() {

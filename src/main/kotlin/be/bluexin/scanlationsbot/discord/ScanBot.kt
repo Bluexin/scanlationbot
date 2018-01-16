@@ -25,7 +25,7 @@ import sx.blah.discord.api.IDiscordClient
 
 object ScanBot {
 
-    private var client: IDiscordClient? = null
+    var client: IDiscordClient? = null
 
     private fun init(client: IDiscordClient) {
         this.client = client

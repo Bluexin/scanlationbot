@@ -69,11 +69,11 @@ fun Team.Companion.findOrUpdate(from: FsTeam): Team {
             {
                 name = from.name
                 slug = from.stub
-                if (from.href.isNotBlank()) href = from.href
-                if (from.facebook.isNotBlank()) facebook = from.facebook
-                if (from.forum.isNotBlank()) forum = from.forum
-                if (from.irc.isNotBlank()) irc = from.irc
-                if (from.twitter.isNotBlank()) twitter = from.twitter
+                if (from.href.isNotBlank() && href.isNullOrEmpty()) href = from.href
+                if (from.facebook.isNotBlank() && facebook.isNullOrEmpty()) facebook = from.facebook
+                if (from.forum.isNotBlank() && forum.isNullOrEmpty()) forum = from.forum
+                if (from.irc.isNotBlank() && irc.isNullOrEmpty()) irc = from.irc
+                if (from.twitter.isNotBlank() && twitter.isNullOrEmpty()) twitter = from.twitter
             }
     )
 }

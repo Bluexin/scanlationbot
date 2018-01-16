@@ -19,6 +19,7 @@
 
 package be.bluexin.scanlationsbot.discord.commands
 
+import be.bluexin.scanlationsbot.discord.replyInChannel
 import sx.blah.discord.handle.obj.IMessage
 
 object Help: Command {
@@ -26,6 +27,6 @@ object Help: Command {
     override val aliases = listOf("?", "halp")
 
     override suspend fun process(trigger: IMessage) {
-        trigger.channel.sendMessage("Who needs help, really? #TODO") // TODO
+        trigger.replyInChannel("Who needs help, really? #TODO") // TODO
     }
 }

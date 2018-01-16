@@ -19,9 +19,13 @@
 
 package be.bluexin.scanlationsbot.discord.commands
 
+import be.bluexin.scanlationsbot.Global
+import be.bluexin.scanlationsbot.discord.ScanBot
 import be.bluexin.scanlationsbot.discord.embedError
+import be.bluexin.scanlationsbot.discord.replyInChannel
 import kotlinx.coroutines.experimental.launch
 import sx.blah.discord.handle.obj.IMessage
+import java.time.LocalDateTime
 
 /**
  * Base interface for all bot commands.
@@ -49,15 +53,31 @@ interface Command {
      */
     val help: String?
         get() = null
+
+    fun requireOwner(trigger: IMessage) {
+        // TODO: more fine-grained permissions, ie allow some people to edit perms/data regarding their own team etc
+        if (trigger.author.longID !in Global.settings.owners) throw Exception("You need to be owner to use this command.")
+    }
+
+    fun String.startsWith(prefix: String) = startsWith(prefix, false)
+
+    fun mapArgs(trigger: IMessage) = trigger.content.split("--").asSequence().flatMap {
+        val s = it.replace("${ScanBot.client!!.ourUser.mention(true)}|${ScanBot.client!!.ourUser.mention(false)}".toRegex(), "").trim()
+        val key = s.split(' ')[0].toLowerCase()
+        val value = if (s.contains(' ')) s.substring(s.indexOf(' '), s.length).trim() else null
+        if (value != null) sequenceOf(key to value) else sequenceOf()
+    }.toMap()
 }
 
 enum class Commands(val command: Command) {
+    DELETE(Delete),
     FIND(Find),
     HELP(Help),
-    INDEX(Index);
+    INDEX(Index),
+    UPDATE(Update);
 
     private fun canProcess(trigger: IMessage)
-            = with(trigger.content.replace("<@!?[0-9]+>".toRegex(), "").trim()) {
+            = with(trigger.content.replace("${ScanBot.client!!.ourUser.mention(true)}|${ScanBot.client!!.ourUser.mention(false)}".toRegex(), "").trim()) {
         startsWith(command.name, ignoreCase = true) || command.aliases.any { this@with.startsWith(it, ignoreCase = true) }
     }
 
@@ -69,8 +89,9 @@ enum class Commands(val command: Command) {
                         it.canProcess(trigger)
                     }?.command?.process(trigger)
                 } catch (e: Throwable) {
-                    trigger.channel.sendMessage(embedError("An error occurred. ${e.message}"))
-                    e.printStackTrace()
+                    trigger.replyInChannel(embedError("An error occurred: ${e.message}"))
+                    System.err.print("${LocalDateTime.now()}: ")
+                    e.printStackTrace() // TODO: use proper logger
                 }
             }
         }

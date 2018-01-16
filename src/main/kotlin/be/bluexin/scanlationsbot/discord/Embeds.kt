@@ -25,6 +25,7 @@ import be.bluexin.scanlationsbot.db.Team
 import be.bluexin.scanlationsbot.db.toJava
 import org.jetbrains.exposed.sql.transactions.transaction
 import sx.blah.discord.api.internal.json.objects.EmbedObject
+import sx.blah.discord.handle.obj.IMessage
 import sx.blah.discord.util.EmbedBuilder
 import java.awt.Color
 import java.time.format.DateTimeFormatterBuilder
@@ -128,21 +129,29 @@ fun embedChapter(chapter: Chapter): EmbedObject {
 }
 
 fun embedTeam(team: Team): EmbedObject {
-    val builder = EmbedBuilder().withTitle(team.name)
-
-    builder.appendField("Members", "TODO", true)
+    val builder = EmbedBuilder()
+            .withTitle(team.name)
+            .withAuthorName(team.slug)
+//            .appendField("Members", "TODO", true)
 
     if (team.href != null) builder.withUrl(team.href)
-    if (team.discord != null) builder.appendField("Discord", "[${team.discord!!.split('/').last()}](${team.discord})", false)
+    if (team.discord != null) builder.appendField("Discord", "[${lastPartOfUrl(team.discord!!)}](${team.discord})", true)
+    if (team.twitter != null) builder.appendField("Twitter", "[${lastPartOfUrl(team.twitter!!)}](${if (team.twitter!!.contains("twitter.com")) team.twitter else "https://twitter.com/${team.twitter}"})", true)
+    if (team.facebook != null) builder.appendField("Facebook", "[${lastPartOfUrl(team.facebook!!)}](${team.facebook})", true)
     if (team.irc != null) builder.appendField("IRC", team.irc, false)
-    if (team.twitter != null) builder.appendField("Twitter", "[${team.twitter!!.split('/').last()}](${team.twitter})", false)
-    if (team.facebook != null) builder.appendField("Facebook", "[${team.facebook!!.split('/').last()}](${team.facebook})", false)
     if (team.forum != null) builder.appendField("Forum", team.forum, false)
     if (team.rss != null) builder.appendField("Rss", team.rss, false)
 
     return builder.build()
 }
 
+private fun lastPartOfUrl(url: String) = url.replace("/\$".toRegex(), "").split('/').last()
+
 fun embedError(text: String) = EmbedBuilder().withDescription(text).withColor(Color.RED).build()
 
 fun embedSuccess(text: String) = EmbedBuilder().withDescription(text).withColor(Color.GREEN).build()
+
+fun embedNeutral(text: String) = EmbedBuilder().withDescription(text).withColor(Color.YELLOW).build()
+
+fun IMessage.replyInChannel(embed: EmbedObject) = channel.sendMessage(embed)
+fun IMessage.replyInChannel(message: String) = channel.sendMessage(message)
